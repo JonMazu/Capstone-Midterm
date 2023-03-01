@@ -1,13 +1,13 @@
 from flask import Response
 from flask import Flask
 from flask import render_template, request
+from phue import Bridge
 import cv2
 
 main = Flask(__name__)
-
 vid = cv2.VideoCapture(0)
 
-def generateFrames():
+def generateFrames():#Generates the frames and returns them to the page.
     while True:
         success, frame = vid.read()
         if (success):
@@ -18,14 +18,25 @@ def generateFrames():
 
 
 @main.route('/', methods = ['POST'])
-def input(): #This is ran every frame, we will check if a file has been edited. Then can go from there.
+def input(): #This is where you handle your inputs from the webpage
+    hue =  Bridge('192.168.1.248')
     if request.method == "POST":
-        print("DO SOMETHING")
-    return render_template("index.html")
+        if(request.form.get("submit") == "connect"):
+            try:
+                hue.connect()
+            except:
+                print("Press the button Doof")
+        if(request.form.get("submit") == "toggle"):
+            if(hue.get_light("Jon's light", 'bri') <= 1):
+                hue.set_light("Jon's light", 'bri', 254)
+            else:
+                hue.set_light("Jon's light", 'bri', 0)
+
+    return render_template("indexHue.html")
 
 @main.route('/')
 def index():
-    return render_template('index.html') 
+    return render_template('indexHue.html') 
 
 @main.route('/video_feed')
 def video_feed():
